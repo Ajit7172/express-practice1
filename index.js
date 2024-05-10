@@ -8,6 +8,14 @@ const PORT = Number(process.env.PORT);
 
 // I can parse request body as json
 app.use(express.json());
+
+// middleware (application level custom mw)
+app.use((req, res, next) =>{
+    req.body.currency = "NPR";
+    req.body.currentTime = new Date().toISOString();
+    next();
+});
+
 // I am the routing mechanism, I will send the API request from / to indexRouter
 app.use("/", indexRouter);
 
