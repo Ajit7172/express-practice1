@@ -1,6 +1,8 @@
+const { secure } = require("../../utils/secure");
+
 const router = require("express").Router();
 
-router.get("/", (["admin"]), (req, res, next) => {
+router.get("/", secure(["admin"]), (req, res, next) => {
     try{
         res.json({msg: "List all orders", data:req.body});
     } catch(e) {

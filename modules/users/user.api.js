@@ -136,36 +136,61 @@ router.post("/verify", (req, res, next) => {
 module.exports = router;
 */
 
+const event = require("events");
 const router = require("express").Router();
-const {generateToken} = require("../../utils/token");
-const { secure} = require("../../utils/secure");
+const { generateToken } = require("../../utils/token");
+const { secure } = require("../../utils/secure");
+const { sendMail } = require("../../services/mailer");
 
-router.get("/", secure(["admin"]), (req, res, nest) => {
+const { validator } = require("./user.validator");
+
+const eventEmitter = new event.EventEmitter();
+eventEmitter.addListener("signup", (email) => 
+    sendMail({
+        email,
+        subject: "MovieMate Signup",
+        htmlMsg: "<b>Thank you for joining Moviemate</b>",
+    })
+);
+
+router.get("/", secure(["admin"]), (req, res, next) => {
+  try {
+    res.json({ msg: "User List generated", data: [] });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post("/register", validator, (req, res, next ) => {
     try{
-     res.json({msg: "User List generated", data: []});   
+        const { email} = req.body;
+        if(!email) throw new Error("Email is missing");
+        // call the nodemailer
+        eventEmitter.emit("signup", email);
+        res.json({msg: "User Registered Successfully"}); 
     }catch(e){
         next(e);
     }
 });
 
 router.post("/login", (req, res, next) => {
-    try{
-        const{email, password} = req.body;
-        if(!email || !password) throw new Error("Email or password is missing");
-        if(email === "chaudharyajit7172@gmail.com" && password === "123"){
-            // generate the jwt token
-            const payload = {
-                email,
-                roles: ["admin"],
-            };
-            const token = generateToken(payload);
-            res.json({msg: "User logged in sucessfully", data:token});
-        } else {
-            res.json({ msg: "Email or Password Invalid", data:""});
-        }
-    } catch(e) {
-        next(e);
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) throw new Error("Email or password is missing");
+    if (email === "chaudharyajit7172@gmail.com" && password === "123") {
+      // generate the jwt token
+      const payload = {
+        email,
+        roles: ["admin"],
+      };
+      const token = generateToken(payload);
+      res.json({ msg: "User logged in sucessfully", data: token });
+    } else {
+      res.json({ msg: "Email or Password Invalid", data: "" });
     }
+  } catch (e) {
+    next(e);
+  }
 });
 
 module.exports = router;

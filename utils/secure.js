@@ -11,7 +11,7 @@ const secure = (sysRole) => {
         //  token expired??
         if (!isValid) throw new Error("Token expired");
         const {data} = isValid;
-        // RBAC
+        // RBAC: ROle Base Access Control
         const validRole = checkRole({sysRole, userRole: data?.roles || [] });
         if(!validRole) throw new Error("User unauthorized");
         next();    
